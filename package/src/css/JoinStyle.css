@@ -1,0 +1,93 @@
+.labelStyle {
+  margin-top: 10px;
+  margin-left: 5px;
+  font-size: 14px;
+}
+.textStyle {
+  font-size: 16px;
+  margin: 4px;
+  position: relative;
+  width: 300px;
+  height: 30px;
+  border-radius: 8px;
+  border: 3px;
+  background-color: rgb(240, 240, 240);
+}
+.textStyle::placeholder {
+  font-size: 14px;
+  opacity: 0.7;
+}
+.passwordStyle {
+  font-size: 16px;
+  margin: 4px;
+  position: relative;
+  width: 300px;
+  height: 30px;
+  border-radius: 8px;
+  border: 3px;
+  background-color: rgb(240, 240, 240);
+}
+.passwordStyle::placeholder {
+  font-size: 14px;
+  opacity: 0.7;
+}
+.phoneNumberStyle {
+  font-size: 16px;
+  margin: 4px;
+  position: relative;
+  width: 300px;
+  height: 30px;
+  border-radius: 8px;
+  border: 3px;
+  background-color: rgb(240, 240, 240);
+}
+.phoneNumberStyle::placeholder {
+  font-size: 14px;
+  opacity: 0.7;
+}
+.emailStyle {
+  font-size: 16px;
+  margin: 4px;
+  position: relative;
+  width: 300px;
+  height: 30px;
+  border-radius: 8px;
+  border: 3px;
+  background-color: rgb(240, 240, 240);
+}
+.emailStyle::placeholder {
+  font-size: 14px;
+  opacity: 0.7;
+}
+.buttonStyle {
+  font-size: 16px;
+  margin: 4px;
+  position: relative;
+  width: 300px;
+  height: 35px;
+  top: 5px;
+  color: white;
+  border-radius: 8px;
+  border: 3px black;
+  /* background-color: black; */
+  background-color: rgba(0, 0, 0, 0.8);
+  cursor: pointer;
+}
+
+.buttonStyle:hover {
+  background-color: #a3a3a3;
+}
+
+.valid-message {
+  color: green;
+  font-size: 14px;
+  margin-left: 5px;
+  width: 300px;
+}
+
+.invalid-message {
+  color: red;
+  font-size: 14px;
+  margin-left: 5px;
+  width: 300px;
+}
