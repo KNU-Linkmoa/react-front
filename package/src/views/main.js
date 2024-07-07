@@ -1,31 +1,35 @@
 import React, { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { API_BASE_URL } from "../config.js";
 import directory from "./directory.png";
 import plus from "./more.png";
 import {
+  UncontrolledDropdown,
   DropdownToggle,
   DropdownMenu,
   DropdownItem,
-  Dropdown,
   Modal,
   ModalHeader,
   ModalBody,
   ModalFooter,
   Button,
 } from "reactstrap";
-import AddRootDirectory from "./AddRootDirectory.js"; // Import the createDirectory function
+import AddRootDirectory from "./AddRootDirectory.js";
+import "../css/style.css";
 
-const Main = ({ updateSidebar }) => {
+const Main = ({}) => {
   const navigate = useNavigate();
   const [list, setList] = useState([]);
-  const [dropdownOpen, setDropdownOpen] = React.useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState({});
   const token = localStorage.getItem("Accesstoken");
+
   const [modal, setModal] = useState(false);
   const [directoryName, setDirectoryName] = useState("");
-  const toggle = () => setDropdownOpen((prevState) => !prevState);
+  const [viewStates, setViewStates] = useState({});
+  const [inputValues, setInputValues] = useState({});
 
+  // directory 리스트 얻기
   const getList = async () => {
     try {
       const response = await axios.get(`${API_BASE_URL}/dir/me`, {
@@ -33,8 +37,6 @@ const Main = ({ updateSidebar }) => {
           Accesstoken: token,
         },
       });
-      console.log(response.data);
-      console.log("서버 응답 데이터:", response.data.response); // 응답 데이터 콘솔 출력
       setList(response.data.response);
     } catch (error) {
       console.error("불러오지 못함", error);
@@ -53,17 +55,69 @@ const Main = ({ updateSidebar }) => {
     setModal(!modal);
   };
 
-  // Function to handle directory creation
+  // 첫 화면에서 디렉토리를 만드는 경우(root directory)
   const handleAddDirectory = async () => {
     try {
       await AddRootDirectory(directoryName);
       console.log("디렉토리 생성 요청");
       toggleModal();
-      getList(); // 디렉토리 생성 후 리스트 다시 가져오기
+      getList();
       setDirectoryName("");
-      updateSidebar(); // 상위 컴포넌트로 콜백 호출하여 Sidebar 다시 렌더링 요청
     } catch (error) {
       console.error("디렉토리 생성 실패", error);
+    }
+  };
+
+  const handleDirectoryMenuClick = (id) => {
+    setDropdownOpen((prevState) => ({
+      ...prevState,
+      [id]: !prevState[id],
+    }));
+
+    // Dropdown이 닫힐 때 변경된 값 저장 요청
+    if (dropdownOpen[id] && inputValues[id]) {
+      EditDirectoryName(id, inputValues[id]);
+    }
+  };
+
+  const handleInputChange = (e, id) => {
+    setInputValues((prevState) => ({
+      ...prevState,
+      [id]: e.target.value,
+    }));
+  };
+
+  const clearInput = (id) => {
+    setInputValues((prevState) => ({
+      ...prevState,
+      [id]: "",
+    }));
+  };
+
+  const handleDeleteDirectory = async (id) => {
+    try {
+      console.log("디렉토리 삭제 요청");
+      getList();
+    } catch (error) {
+      console.error("디렉토리 삭제 실패", error);
+    }
+  };
+
+  const EditDirectoryName = async (id, newName) => {
+    try {
+      await axios.put(
+        `${API_BASE_URL}/dir/${id}`,
+        { name: newName },
+        {
+          headers: {
+            Accesstoken: token,
+          },
+        }
+      );
+      getList(); // 변경 후 리스트 다시 가져오기
+      console.log("되고 있옹");
+    } catch (error) {
+      console.error("디렉토리 이름 변경 실패", error);
     }
   };
 
@@ -76,14 +130,19 @@ const Main = ({ updateSidebar }) => {
           verticalAlign: "top",
         }}
       >
-        <Dropdown isOpen={dropdownOpen} toggle={toggle}>
+        <UncontrolledDropdown
+          isOpen={dropdownOpen.global}
+          toggle={() =>
+            setDropdownOpen({ ...dropdownOpen, global: !dropdownOpen.global })
+          }
+        >
           <DropdownToggle color="transparent">
             <img src={plus} alt="add" width="60" />
           </DropdownToggle>
           <DropdownMenu>
             <DropdownItem onClick={toggleModal}>디렉토리추가</DropdownItem>
           </DropdownMenu>
-        </Dropdown>
+        </UncontrolledDropdown>
       </div>
       <Modal isOpen={modal} toggle={toggleModal} style={{ zIndex: 10 }}>
         <ModalHeader toggle={toggleModal}>디렉토리 추가하기</ModalHeader>
@@ -111,6 +170,7 @@ const Main = ({ updateSidebar }) => {
           </Button>
         </ModalFooter>
       </Modal>
+
       <div style={{ display: "flex", flexWrap: "wrap" }}>
         {list !== undefined &&
           list.map((dir) => (
@@ -129,7 +189,65 @@ const Main = ({ updateSidebar }) => {
                 onDoubleClick={() => handleDoubleClick(dir.id)}
                 style={{ cursor: "pointer" }}
               />
-              <div>{dir.name}</div>
+              <div className="name-and-icon">
+                <div className="truncated-text" style={{ color: "gray" }}>
+                  {dir.name}
+                </div>
+                <UncontrolledDropdown
+                  className="custom-dropdown"
+                  isOpen={dropdownOpen[dir.id]}
+                  toggle={() => handleDirectoryMenuClick(dir.id)}
+                >
+                  <DropdownToggle
+                    tag="i"
+                    className={`bi bi-caret-down-fill small custom-dropdown-toggle`}
+                    style={{ color: "gray" }}
+                  ></DropdownToggle>
+                  <DropdownMenu className="custom-dropdown-menu">
+                    <div className="input_container">
+                      <input
+                        type="text"
+                        value={
+                          inputValues[dir.id] !== undefined
+                            ? inputValues[dir.id]
+                            : dir.name
+                        }
+                        onChange={(e) => handleInputChange(e, dir.id)}
+                        style={{ flex: "1", marginRight: "10px", width: "90%" }}
+                      />
+                      <button
+                        onClick={() => clearInput(dir.id)}
+                        style={{
+                          border: "none",
+                          background: "transparent",
+                          cursor: "pointer",
+                        }}
+                      >
+                        <i className="bi bi-x-circle-fill small"></i>
+                      </button>
+                    </div>
+                    <DropdownItem className="custom-dropdown-item">
+                      <i
+                        className="bi bi-share"
+                        style={{ marginRight: "10px" }}
+                      ></i>{" "}
+                      공유하기
+                    </DropdownItem>
+                    <div className="custom-dropdown-divider"></div>
+                    <DropdownItem
+                      className="custom-dropdown-item"
+                      style={{ color: "red" }}
+                      onClick={() => handleDeleteDirectory(dir.id)}
+                    >
+                      <i
+                        className="bi bi-trash3"
+                        style={{ marginRight: "10px", color: "red" }}
+                      ></i>
+                      삭제하기
+                    </DropdownItem>
+                  </DropdownMenu>
+                </UncontrolledDropdown>
+              </div>
             </div>
           ))}
       </div>

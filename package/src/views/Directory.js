@@ -5,6 +5,7 @@ import { API_BASE_URL } from "../config.js";
 import link from "./link.png";
 import plus from "./more.png";
 import {
+  UncontrolledDropdown,
   DropdownToggle,
   DropdownMenu,
   DropdownItem,
@@ -24,9 +25,12 @@ const Directory = () => {
   const [dropdownOpen, setDropdownOpen] = React.useState(false);
   const token = localStorage.getItem("Accesstoken");
   const [modal, setModal] = useState(false);
+
   const [LinkName, setLinkName] = useState("");
   const [LinkUrl, setLinkUrl] = useState("");
   const toggle = () => setDropdownOpen((prevState) => !prevState);
+
+  const [inputValues, setInputValues] = useState({});
 
   const getList = async () => {
     try {
@@ -45,7 +49,7 @@ const Directory = () => {
 
   useEffect(() => {
     getList();
-  }, []);
+  }, [id]);
 
   const handleDoubleClick = (url) => {
     window.location.href = `${url}`;
@@ -58,7 +62,6 @@ const Directory = () => {
   const handleAddLink = async () => {
     try {
       await AddLink(LinkName, LinkUrl, id);
-      console.log("링크 생성 요청", LinkName, LinkUrl, id);
       toggleModal();
       getList();
       setLinkName("");
@@ -68,6 +71,58 @@ const Directory = () => {
     }
   };
 
+  const handleSiteMenuClick = (id) => {
+    setDropdownOpen((prevState) => ({
+      ...prevState,
+      [id]: !prevState[id],
+    }));
+
+    // Dropdown이 닫힐 때 변경된 값 저장 요청
+    if (dropdownOpen[id] && inputValues[id]) {
+      EditSiteName(id, inputValues[id]);
+    }
+  };
+
+  const EditSiteName = async (id, newName) => {
+    try {
+      await axios.put(
+        `${API_BASE_URL}/dir/${id}`,
+        { name: newName },
+        {
+          headers: {
+            Accesstoken: token,
+          },
+        }
+      );
+      getList(); // 변경 후 리스트 다시 가져오기
+      console.log("되고 있옹");
+    } catch (error) {
+      console.error("사이트 이름 변경 실패", error);
+    }
+  };
+
+  const handleInputChange = (e, id) => {
+    setInputValues((prevState) => ({
+      ...prevState,
+      [id]: e.target.value,
+    }));
+  };
+
+  const clearInput = (id) => {
+    setInputValues((prevState) => ({
+      ...prevState,
+      [id]: "",
+    }));
+  };
+
+  const handleDeleteSite = async (id) => {
+    try {
+      console.log("site 삭제 요청");
+      getList();
+    } catch (error) {
+      console.error("site 삭제 실패", error);
+    }
+  };
   return (
     <div>
       <div
@@ -77,15 +132,19 @@ const Directory = () => {
           verticalAlign: "top",
         }}
       >
-        <Dropdown isOpen={dropdownOpen} toggle={toggle}>
+        <UncontrolledDropdown
+          isOpen={dropdownOpen.global}
+          toggle={() =>
+            setDropdownOpen({ ...dropdownOpen, global: !dropdownOpen.global })
+          }
+        >
           <DropdownToggle color="transparent">
             <img src={plus} alt="add" width="60" />
           </DropdownToggle>
           <DropdownMenu>
             <DropdownItem onClick={toggleModal}>디렉토리추가</DropdownItem>
-            <DropdownItem onClick={toggleModal}>사이트추가</DropdownItem>
           </DropdownMenu>
-        </Dropdown>
+        </UncontrolledDropdown>
       </div>
       <Modal isOpen={modal} toggle={toggleModal} style={{ zIndex: 10 }}>
         <ModalHeader toggle={toggleModal}>링크 추가하기</ModalHeader>
@@ -130,7 +189,65 @@ const Directory = () => {
                 onDoubleClick={() => handleDoubleClick(site.siteUrl)}
                 style={{ cursor: "pointer" }}
               />
-              <div>{site.siteName}</div>
+              <div className="name-and-icon">
+                <div className="truncated-text" style={{ color: "gray" }}>
+                  {site.siteName}
+                </div>
+                <UncontrolledDropdown
+                  className="custom-dropdown"
+                  isOpen={dropdownOpen[site.id]}
+                  toggle={() => handleSiteMenuClick(site.id)}
+                >
+                  <DropdownToggle
+                    tag="i"
+                    className={`bi bi-caret-down-fill small custom-dropdown-toggle`}
+                    style={{ color: "gray" }}
+                  ></DropdownToggle>
+                  <DropdownMenu className="custom-dropdown-menu">
+                    <div className="input_container">
+                      <input
+                        type="text"
+                        value={
+                          inputValues[site.id] !== undefined
+                            ? inputValues[site.id]
+                            : site.siteName
+                        }
+                        onChange={(e) => handleInputChange(e, site.id)}
+                        style={{ flex: "1", marginRight: "10px", width: "90%" }}
+                      />
+                      <button
+                        onClick={() => clearInput(site.id)}
+                        style={{
+                          border: "none",
+                          background: "transparent",
+                          cursor: "pointer",
+                        }}
+                      >
+                        <i className="bi bi-x-circle-fill small"></i>
+                      </button>
+                    </div>
+                    <DropdownItem className="custom-dropdown-item">
+                      <i
+                        className="bi bi-share"
+                        style={{ marginRight: "10px" }}
+                      ></i>{" "}
+                      공유하기
+                    </DropdownItem>
+                    <div className="custom-dropdown-divider"></div>
+                    <DropdownItem
+                      className="custom-dropdown-item"
+                      style={{ color: "red" }}
+                      onClick={() => handleDeleteSite(site.id)}
+                    >
+                      <i
+                        className="bi bi-trash3"
+                        style={{ marginRight: "10px", color: "red" }}
+                      ></i>
+                      삭제하기
+                    </DropdownItem>
+                  </DropdownMenu>
+                </UncontrolledDropdown>
+              </div>
             </div>
           ))}
       </div>

@@ -43,7 +43,6 @@ const ThemeRoutes = [
       { path: "/login", exact: true, element: <Login /> },
       { path: "/join", exact: true, element: <Join /> },
       { path: "/main", exact: true, element: <Main /> },
-
       { path: "/dir/:id", element: <Directory /> },
     ],
   },

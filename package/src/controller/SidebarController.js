@@ -3,16 +3,16 @@ import Main from "../views/main";
 import Sidebar from "../layouts/Sidebar";
 
 const SidebarController = () => {
-  const [updateSidebar, setUpdateSidebar] = useState(false);
+  const [sidebarKey, setSidebarKey] = useState(0);
 
-  const toggleSidebarUpdate = () => {
-    setUpdateSidebar((prevState) => !prevState);
+  const updateSidebar = () => {
+    setSidebarKey((prevKey) => prevKey + 1);
   };
 
   return (
     <div style={{ display: "flex" }}>
-      <Sidebar updateSidebar={updateSidebar} />
-      <Main updateSidebar={toggleSidebarUpdate} />
+      <Sidebar key={sidebarKey} />
+      <Main updateSidebar={updateSidebar} />
     </div>
   );
 };
